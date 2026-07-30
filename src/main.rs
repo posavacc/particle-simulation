@@ -4,7 +4,9 @@ struct Particle {
     pos: Vec2,
     vel: Vec2,
     rest: f32,
-    radius: f32,
+
+    rad: f32,
+    col: Color,
 }
 
 const WIDTH:  i32 = 1280;
@@ -16,8 +18,10 @@ const GRAVITY: Vec2 = Vec2 { x: 0.0, y: -9.81 };
 #[macroquad::main(window_conf())]
 async fn main() {
 
-    let mut particle = Particle { pos: vec2(0.0, 0.0), vel: vec2(10.0, 10.0), rest: 0.7, radius: 0.1 };
-    
+    let particle0 = Particle { pos: vec2(0.0, 0.0), vel: vec2(10.0, 10.0), rest: 0.7, rad: 0.1, col: BLUE };
+    let particle1 = Particle { pos: vec2(2.0, 0.0), vel: vec2(0.0, 0.0), rest: 0.7, rad: 0.1, col: YELLOW };
+
+    let mut particles = vec![particle1, particle0];
 
     loop {
         if is_key_pressed(KeyCode::Escape) || is_quit_requested() {
@@ -26,10 +30,15 @@ async fn main() {
 
         let dt = get_frame_time();
 
-        bounds_collision(&mut particle);
-        integrate(&mut particle, dt);
+        for mut part in &mut particles {
+            bounds_collision(&mut part);
+            integrate(&mut part, dt);
 
-        draw(&particle);
+        }
+
+
+        clear_background(BLACK);
+        draw(&particles);
 
         next_frame().await
     }
@@ -48,7 +57,7 @@ fn bounds_collision(p: &mut Particle) {
     let top    = HEIGHT as f32 / (SCALE * 2.0);
     let bottom = -top;
 
-    let r = p.radius;
+    let r = p.rad;
 
     if p.pos.x >= right - r {
         p.pos.x = right - r;
@@ -94,12 +103,13 @@ fn project_to_screen(p: Vec2, scale: f32) -> Vec2 {
     }
 }
 
-fn draw(p: &Particle) {
-    let radius = p.radius;
-    let screen_pos = project_to_screen(p.pos, SCALE);
+fn draw(parts: &[Particle]) {
+    for p in parts {
+        let radius = p.rad;
+        let screen_pos = project_to_screen(p.pos, SCALE);
 
-    clear_background(BLACK);
-    draw_circle(screen_pos.x, screen_pos.y, radius * SCALE, BLUE);
+        draw_circle(screen_pos.x, screen_pos.y, radius * SCALE, p.col);
+    }
 }
 
 fn window_conf() -> Conf {
