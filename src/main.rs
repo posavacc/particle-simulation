@@ -3,15 +3,24 @@ use macroquad::prelude::*;
 const WIDTH:  i32 = 1280;
 const HEIGHT: i32 = 720;
 
+const GRAVITY: Vec2 = Vec2 { x: 0.0, y: -9.81 };
+
 struct Particle {
     pos: Vec2,
     vel: Vec2,
 }
 
+fn integrate(p: &mut Particle, dt: f32) {
+    let accel = GRAVITY;
+
+    p.vel += accel * dt;
+    p.pos += p.vel * dt;
+}
+
 #[macroquad::main(window_conf())]
 async fn main() {
 
-    let mut particle = Particle { pos: vec2(0.0, 0.0), vel: vec2(70.0, 30.0) };
+    let mut particle = Particle { pos: vec2(0.0, 0.0), vel: vec2(0.0, 0.0) };
 
 
     loop {
@@ -21,7 +30,7 @@ async fn main() {
 
         let dt = get_frame_time();
 
-        particle.pos += particle.vel * dt;
+        integrate(&mut particle, dt);
 
         let screen_point = project_to_screen(particle.pos);
 
