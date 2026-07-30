@@ -18,7 +18,9 @@ const SCALE: f32 = 100.0;
 
 const GRAVITY: Vec2 = Vec2 { x: 0.0, y: -9.81 };
 
-const PARTICLE_COUNT: i32 = 30;
+const PARTICLE_COUNT: i32 = 300;
+
+const SUBSTEPS: i32 = 8;
 
 #[macroquad::main(window_conf())]
 async fn main() {
@@ -26,8 +28,8 @@ async fn main() {
     let mut particles = Vec::new();
 
     for i in 0..PARTICLE_COUNT {
-        let a: f32 = ::rand::random_range(-10.0..10.0);
-        let b: f32 = ::rand::random_range(-10.0..10.0);
+        let a: f32 = ::rand::random_range(-05.0..05.0);
+        let b: f32 = ::rand::random_range(-05.0..05.0);
 
 
         let mut color = YELLOW;
@@ -55,27 +57,33 @@ async fn main() {
 
         let dt = get_frame_time();
 
-        for i in 0..particles.len() {
-            for j in i+1..particles.len() {
-                let (first, last) = particles.split_at_mut(j);
-
-                let p1 = &mut first[i];
-                let p2 = &mut last[0];
-
-                particle_collision(p1, p2);
-            }
+        let sub_dt = dt / SUBSTEPS as f32;
+        for _ in 0..SUBSTEPS {
+            update(&mut particles, sub_dt);
         }
-
-        for mut part in &mut particles {
-            bounds_collision(&mut part);
-            integrate(&mut part, dt);
-        }
-
 
         clear_background(BLACK);
         draw(&particles);
 
         next_frame().await
+    }
+}
+
+fn update(particles: &mut [Particle], dt: f32) {
+    for i in 0..particles.len() {
+        for j in i+1..particles.len() {
+            let (first, last) = particles.split_at_mut(j);
+
+            let p1 = &mut first[i];
+            let p2 = &mut last[0];
+
+            particle_collision(p1, p2);
+        }
+    }
+
+    for mut part in particles {
+        bounds_collision(&mut part);
+        integrate(&mut part, dt);
     }
 }
 
