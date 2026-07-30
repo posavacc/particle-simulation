@@ -1,21 +1,14 @@
 use macroquad::prelude::*;
 
-const WIDTH:  i32 = 1280;
-const HEIGHT: i32 = 720;
-
-const GRAVITY: Vec2 = Vec2 { x: 0.0, y: -9.81 };
-
 struct Particle {
     pos: Vec2,
     vel: Vec2,
 }
 
-fn integrate(p: &mut Particle, dt: f32) {
-    let accel = GRAVITY;
+const WIDTH:  i32 = 1280;
+const HEIGHT: i32 = 720;
 
-    p.vel += accel * dt;
-    p.pos += p.vel * dt;
-}
+const GRAVITY: Vec2 = Vec2 { x: 0.0, y: -9.81 };
 
 #[macroquad::main(window_conf())]
 async fn main() {
@@ -42,11 +35,18 @@ async fn main() {
     }
 }
 
-fn project_to_screen(p: Vec2) -> Vec2 {
-    let x =  p.x + (WIDTH  as f32 / 2.0);
-    let y = -p.y + (HEIGHT as f32 / 2.0);
+fn integrate(p: &mut Particle, dt: f32) {
+    let accel = GRAVITY;
 
-    return Vec2 { x, y };
+    p.vel += accel * dt;
+    p.pos += p.vel * dt;
+}
+
+fn project_to_screen(p: Vec2) -> Vec2 {
+    Vec2 {
+        x:  p.x + (WIDTH  as f32 / 2.0),
+        y: -p.y + (HEIGHT as f32 / 2.0)
+    }
 }
 
 fn window_conf() -> Conf {
