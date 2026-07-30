@@ -1,4 +1,4 @@
-use macroquad::prelude::*;
+use macroquad::{prelude::*};
 
 struct Particle {
     pos: Vec2,
@@ -15,13 +15,33 @@ const SCALE: f32 = 100.0;
 
 const GRAVITY: Vec2 = Vec2 { x: 0.0, y: -9.81 };
 
+const PARTICLE_COUNT: i32 = 30;
+
 #[macroquad::main(window_conf())]
 async fn main() {
 
-    let particle0 = Particle { pos: vec2(0.0, 0.0), vel: vec2(10.0, 10.0), rest: 0.7, rad: 0.1, col: BLUE };
-    let particle1 = Particle { pos: vec2(2.0, 0.0), vel: vec2(0.0, 0.0), rest: 0.7, rad: 0.1, col: YELLOW };
+    let mut particles = Vec::new();
 
-    let mut particles = vec![particle1, particle0];
+    for i in 0..PARTICLE_COUNT {
+        let a: f32 = ::rand::random_range(-10.0..10.0);
+        let b: f32 = ::rand::random_range(-10.0..10.0);
+
+
+        let mut color = YELLOW;
+        if i % 2 == 0 {
+            color = BLUE;
+        }
+
+        let p = Particle {
+            pos: vec2(a, b),
+            vel: vec2(0.0, 0.0),
+            rest: 0.7,
+            rad: 0.1,
+            col: color
+        };
+
+        particles.push(p);
+    }
 
     loop {
         if is_key_pressed(KeyCode::Escape) || is_quit_requested() {
@@ -30,10 +50,20 @@ async fn main() {
 
         let dt = get_frame_time();
 
+        for i in 0..particles.len() {
+            for j in i+1..particles.len() {
+                let (first, last) = particles.split_at_mut(j);
+
+                let p1 = &mut first[i];
+                let p2 = &mut last[0];
+
+                particle_collision(p1, p2);
+            }
+        }
+
         for mut part in &mut particles {
             bounds_collision(&mut part);
             integrate(&mut part, dt);
-
         }
 
 
@@ -49,6 +79,22 @@ fn integrate(p: &mut Particle, dt: f32) {
 
     p.vel += accel * dt;
     p.pos += p.vel * dt;
+}
+
+fn particle_collision(p1: &mut Particle, p2: &mut Particle) {
+    let dst = p1.pos.distance(p2.pos);
+
+    let overlap = p1.rad + p2.rad - dst;
+
+    if overlap > 0.0 && dst != 0.0 {
+        let n = (p2.pos - p1.pos) / dst;
+
+        p1.pos -= overlap * 0.5 * n;
+        p2.pos += overlap * 0.5 * n;
+
+        p1.vel += n.dot(p1.vel);
+        p2.vel += n.dot(p2.vel);
+    }
 }
 
 fn bounds_collision(p: &mut Particle) {
