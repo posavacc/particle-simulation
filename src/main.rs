@@ -5,6 +5,9 @@ struct Particle {
     vel: Vec2,
     rest: f32,
 
+    mass: f32,
+    inv_mass: f32,
+
     rad: f32,
     col: Color,
 }
@@ -36,6 +39,8 @@ async fn main() {
             pos: vec2(a, b),
             vel: vec2(0.0, 0.0),
             rest: 0.7,
+            mass: 1.0,
+            inv_mass: 1.0,
             rad: 0.1,
             col: color
         };
@@ -82,6 +87,8 @@ fn integrate(p: &mut Particle, dt: f32) {
 }
 
 fn particle_collision(p1: &mut Particle, p2: &mut Particle) {
+    //let rest = (p1.rest * p2.rest).sqrt();
+
     let dst = p1.pos.distance(p2.pos);
 
     let overlap = p1.rad + p2.rad - dst;
@@ -89,11 +96,19 @@ fn particle_collision(p1: &mut Particle, p2: &mut Particle) {
     if overlap > 0.0 && dst != 0.0 {
         let n = (p2.pos - p1.pos) / dst;
 
-        p1.pos -= overlap * 0.5 * n;
-        p2.pos += overlap * 0.5 * n;
+        let rel_v = p2.vel - p1.vel;
+        let n_v = rel_v.dot(n);
 
-        p1.vel += n.dot(p1.vel);
-        p2.vel += n.dot(p2.vel);
+        if n_v <= 0.0 {
+            let j = -(1.0 + p1.rest) * n_v / (p1.inv_mass + p2.inv_mass);
+            let j = n * j;
+
+            p1.pos -= overlap * 0.5 * n;
+            p2.pos += overlap * 0.5 * n;
+
+            p1.vel -= j / p1.mass;
+            p2.vel += j / p1.mass;
+        }
     }
 }
 
