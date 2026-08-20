@@ -8,7 +8,7 @@ pub struct Grid {
 
 impl Grid {
     pub fn new(mut grid_length: i32) -> Self {
-        while grid_length % WIDTH != 0 {
+        while WIDTH % grid_length != 0 {
            grid_length += 1;
         }
 
@@ -16,10 +16,9 @@ impl Grid {
         let grid_height = (grid_length as f32 / aspect_ratio).round() as u32;
 
         let size = WIDTH as f32 / (SCALE * grid_length as f32);
+        let top_left = reverse_projection(Vec2::ZERO, SCALE);
 
         let mut cells = Vec::new();
-
-        let top_left = reverse_projection(Vec2::ZERO, SCALE);
 
         for i in 0..grid_height {
             for j in 0..grid_length {
