@@ -11,13 +11,13 @@ pub struct Particle {
 }
 
 impl Particle {
-    pub fn new(pos: Vec2, rest: f32, color: Color) -> Self {
+    pub fn new(pos: Vec2, rest: f32, radius: f32, color: Color) -> Self {
         Self {
             pos: pos,
             prev_pos: pos,
             accel: vec2(0.0, 0.0),
             rest: rest,
-            rad: 0.10,
+            rad: radius,
             col: color
         }
     }

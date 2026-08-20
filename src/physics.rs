@@ -85,26 +85,23 @@ impl Physics {
         let rest = p.rest;
         let r = p.rad;
 
-        if p.pos.x - right + r >= 0.0 {
-            let vx = p.pos.x - p.prev_pos.x;
-            p.pos.x = right - r;
-            p.prev_pos.x = p.pos.x + vx * rest;
+        let overlap_right = (p.pos.x + r) - right;
+        let overlap_left = (p.pos.x - r) - left;
+        let overlap_bottom = (p.pos.y - r) - bottom;
+        let overlap_top = (p.pos.y + r) - top;
 
-        } else if p.pos.x - left - r <= 0.0 {
-            let vx = p.pos.x - p.prev_pos.x;
-            p.pos.x = left + r;
-            p.prev_pos.x = p.pos.x + vx * rest;
+        if overlap_right >= 0.0 {
+            p.pos.x -= overlap_right * (1.0 + rest);
+
+        } else if overlap_left <= 0.0 {
+            p.pos.x -= overlap_left * (1.0 + rest);
         }
 
-        if p.pos.y - top + r >= 0.0 {
-            let vy = p.pos.y - p.prev_pos.y;
-            p.pos.y = top - r;
-            p.prev_pos.y = p.pos.y + vy * rest;
+        if overlap_top >= 0.0 {
+            p.pos.y -= overlap_top * (1.0 + rest);
 
-        } else if p.pos.y - bottom - r <= 0.0 {
-            let vy = p.pos.y - p.prev_pos.y;
-            p.pos.y = bottom + r;
-            p.prev_pos.y = p.pos.y + vy * rest;
+        } else if overlap_bottom <= 0.0 {
+            p.pos.y -= overlap_bottom * (1.0 + rest);
         }
     }
 }

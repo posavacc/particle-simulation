@@ -3,7 +3,7 @@ use crate::particle::Particle;
 
 pub const WIDTH:  i32 = 1920;
 pub const HEIGHT: i32 = 1080;
-pub const SCALE: f32 = 60.0;
+pub const SCALE: f32 = 100.0;
 
 pub fn project_to_screen(p: Vec2, scale: f32) -> Vec2 {
     Vec2 {

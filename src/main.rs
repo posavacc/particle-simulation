@@ -1,7 +1,7 @@
 use macroquad::{prelude::*};
 use particle_simulation::{particle::Particle, physics::Physics, render::*};
 
-const PARTICLE_COUNT: i32 = 200;
+const PARTICLE_COUNT: i32 = 1000;
 const SUBSTEPS: i32 = 8;
 
 #[macroquad::main(window_conf())]
@@ -32,7 +32,8 @@ async fn main() {
             color = RED;
         }
 
-        let p = Particle::new(vec2(a, b), 0.7, color);
+        let radius = ::rand::random_range(0.06..0.14);
+        let p = Particle::new(vec2(a, b), 0.7, radius, color);
 
         particles.push(p);
     }
@@ -52,8 +53,8 @@ async fn main() {
         }
 
         clear_background(BLACK);
-        draw_fps();
         draw(&particles);
+        draw_fps();
 
         next_frame().await
     }
