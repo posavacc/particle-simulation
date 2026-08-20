@@ -1,9 +1,7 @@
 use macroquad::math::Vec2;
 
 use crate::particle::Particle;
-use crate::WIDTH;
-use crate::HEIGHT;
-use crate::SCALE;
+use crate::render::{WIDTH, HEIGHT, SCALE};
 
 struct Bounds {
     top: f32,
@@ -33,9 +31,16 @@ impl Physics {
     }
 
     pub fn update(&self, particles: &mut [Particle], dt: f32) {
-        for mut part in &mut *particles {
-            self.bounds_collision(&mut part);
-            self.integrate(&mut part, dt);
+        for part in &mut *particles {
+            part.accel = Vec2::ZERO;
+        }
+
+        for part in &mut *particles {
+            self.integrate(part, dt);
+        }
+
+        for part in &mut *particles {
+            self.bounds_collision(part);
         }
 
         for i in 0..particles.len() {
@@ -51,15 +56,14 @@ impl Physics {
     }
 
     fn integrate(&self, p: &mut Particle, dt: f32) {
-        let accel = self.gravity;
+        p.accel += self.gravity;
 
-        p.vel += accel * dt;
-        p.pos += p.vel * dt;
+        let temp_pos = p.pos;
+        p.pos = p.pos * 2.0 - p.prev_pos + p.accel * dt * dt;
+        p.prev_pos = temp_pos;
     }
 
     fn particle_collision(p1: &mut Particle, p2: &mut Particle) {
-        //let rest = (p1.rest * p2.rest).sqrt();
-
         let dst = p1.pos.distance(p2.pos);
 
         let overlap = p1.rad + p2.rad - dst;
@@ -67,19 +71,8 @@ impl Physics {
         if overlap > 0.0 && dst != 0.0 {
             let n = (p2.pos - p1.pos) / dst;
 
-            let rel_v = p2.vel - p1.vel;
-            let n_v = rel_v.dot(n);
-
-            if n_v <= 0.0 {
-                let j = -(1.0 + p1.rest) * n_v / (p1.inv_mass + p2.inv_mass);
-                let j = n * j;
-
-                p1.pos -= overlap * 0.5 * n;
-                p2.pos += overlap * 0.5 * n;
-
-                p1.vel -= j * p1.inv_mass;
-                p2.vel += j * p2.inv_mass;
-            }
+            p1.pos -= overlap * 0.5 * n;
+            p2.pos += overlap * 0.5 * n;
         }
     }
 
@@ -89,43 +82,29 @@ impl Physics {
         let top    = self.bounds.top;
         let bottom = self.bounds.bottom;
 
+        let rest = p.rest;
         let r = p.rad;
 
-        if p.pos.x >= right - r {
+        if p.pos.x - right + r >= 0.0 {
+            let vx = p.pos.x - p.prev_pos.x;
             p.pos.x = right - r;
+            p.prev_pos.x = p.pos.x + vx * rest;
 
-            if p.vel.x > 0.0 {
-                p.vel.x = -p.vel.x * p.rest;
-            }
-        } else if p.pos.x <= left + r {
+        } else if p.pos.x - left - r <= 0.0 {
+            let vx = p.pos.x - p.prev_pos.x;
             p.pos.x = left + r;
-
-            if p.vel.x < 0.0 {
-                p.vel.x = -p.vel.x * p.rest;
-            }
+            p.prev_pos.x = p.pos.x + vx * rest;
         }
 
-        if p.pos.y >= top - r {
+        if p.pos.y - top + r >= 0.0 {
+            let vy = p.pos.y - p.prev_pos.y;
             p.pos.y = top - r;
+            p.prev_pos.y = p.pos.y + vy * rest;
 
-            if p.vel.y > 0.0 {
-                p.vel.y = -p.vel.y * p.rest;
-            }
-        } else if p.pos.y <= bottom + r {
+        } else if p.pos.y - bottom - r <= 0.0 {
+            let vy = p.pos.y - p.prev_pos.y;
             p.pos.y = bottom + r;
-
-            if p.vel.y < 0.0 {
-                p.vel.y = -p.vel.y * p.rest;
-            }
-        }
-
-        if p.vel.x.abs() < 0.01 {
-            p.vel.x = 0.0;
-        }
-
-        if p.vel.y.abs() < 0.01 {
-            p.vel.y = 0.0;
+            p.prev_pos.y = p.pos.y + vy * rest;
         }
     }
 }
-

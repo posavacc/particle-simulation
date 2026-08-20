@@ -1,40 +1,38 @@
 use macroquad::{prelude::*};
-use crate::particle::Particle;
-use crate::physics::Physics;
+use particle_simulation::{particle::Particle, physics::Physics, render::*};
 
-mod particle;
-mod physics;
-
-const WIDTH:  i32 = 1280;
-const HEIGHT: i32 = 720;
-const SCALE: f32 = 100.0;
-
-const PARTICLE_COUNT: i32 = 300;
+const PARTICLE_COUNT: i32 = 200;
 const SUBSTEPS: i32 = 8;
 
 #[macroquad::main(window_conf())]
 async fn main() {
 
-    let mut particles = Vec::new();
+    let mut particles: Vec<Particle> = Vec::new();
 
+    let top_left = reverse_projection(vec2(0.0, 0.0), SCALE);
+    let bottom_right = reverse_projection(vec2(WIDTH as f32, HEIGHT as f32), SCALE);
     for i in 0..PARTICLE_COUNT {
-        let a: f32 = ::rand::random_range(-05.0..05.0);
-        let b: f32 = ::rand::random_range(-05.0..05.0);
+        let mut a: f32 = ::rand::random_range(-08.0..08.0);
+        let mut b: f32 = ::rand::random_range(-05.0..05.0);
+
+        for part in &particles {
+            let mut dst = vec2(a, b).distance(part.pos);
+            while dst < 5.0 {
+                a = ::rand::random_range(top_left.x..bottom_right.x);
+                b = ::rand::random_range(bottom_right.y..top_left.y);
+
+                dst = vec2(a, b).distance(part.pos);
+            }
+        }
 
         let mut color = YELLOW;
         if i % 2 == 0 {
             color = BLUE;
+        } if i % 3 == 0 {
+            color = RED;
         }
 
-        let p = Particle {
-            pos: vec2(a, b),
-            vel: vec2(0.0, 0.0),
-            rest: 0.7,
-            mass: 1.0,
-            inv_mass: 1.0,
-            rad: 0.1,
-            col: color
-        };
+        let p = Particle::new(vec2(a, b), 0.7, color);
 
         particles.push(p);
     }
@@ -54,6 +52,7 @@ async fn main() {
         }
 
         clear_background(BLACK);
+        draw_fps();
         draw(&particles);
 
         next_frame().await
@@ -61,28 +60,3 @@ async fn main() {
 }
 
 
-fn project_to_screen(p: Vec2, scale: f32) -> Vec2 {
-    Vec2 {
-        x:  p.x * scale + (WIDTH  as f32 / 2.0),
-        y: -p.y * scale + (HEIGHT as f32 / 2.0)
-    }
-}
-
-fn draw(parts: &[Particle]) {
-    for p in parts {
-        let radius = p.rad;
-        let screen_pos = project_to_screen(p.pos, SCALE);
-
-        draw_circle(screen_pos.x, screen_pos.y, radius * SCALE, p.col);
-    }
-}
-
-fn window_conf() -> Conf {
-    Conf {
-        window_title: "particle simulation".to_string(),
-        window_width: WIDTH,
-        window_height: HEIGHT,
-        window_resizable: true,
-        ..Default::default()
-    }
-}
