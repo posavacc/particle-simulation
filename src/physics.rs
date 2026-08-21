@@ -18,7 +18,7 @@ impl Bounds {
     }
 }
 
-pub fn update(particles: &mut [Particle], dt: f32, bounds: Bounds) {
+pub fn update(particles: &mut [Particle], dt: f32, bounds: &Bounds) {
     for part in &mut *particles {
         integrate(part, dt);
     }

@@ -1,9 +1,12 @@
 use macroquad::{prelude::*};
 
+const GRAVITY: Vec2 = Vec2 { x: 0.0, y: -9.81 };
+
 pub struct Particle {
     pub pos: Vec2,
     pub prev_pos: Vec2,
     pub accel: Vec2,
+    pub force: Vec2,
     pub rest: f32,
 
     pub rad: f32,
@@ -15,10 +18,15 @@ impl Particle {
         Self {
             pos: pos,
             prev_pos: pos,
-            accel: vec2(0.0, 0.0),
+            accel: Vec2::ZERO,
+            force: Vec2::ZERO,
             rest: rest,
             rad: radius,
             col: color
         }
+    }
+
+    pub fn reset_accel(&mut self) {
+        self.accel = GRAVITY;
     }
 }

@@ -1,8 +1,8 @@
 use macroquad::{prelude::*};
-use particle_simulation::{particle::Particle, physics::Physics, render::*};
+use particle_simulation::{particle::Particle, physics::*, render::*};
 
-const PARTICLE_COUNT: i32 = 1000;
-const SUBSTEPS: i32 = 8;
+const PARTICLE_COUNT: i32 = 100;
+const SUBSTEPS: i32 = 6;
 
 #[macroquad::main(window_conf())]
 async fn main() {
@@ -38,18 +38,38 @@ async fn main() {
         particles.push(p);
     }
 
-    let sim = Physics::new();
+    let right = reverse_projection(vec2(WIDTH as f32, 0.0), SCALE).x;
+    let top = reverse_projection(vec2(HEIGHT as f32, 0.0), SCALE).y;
+    let bounds = Bounds::new(-right, right, top, -top);
 
     loop {
         if is_key_pressed(KeyCode::Escape) || is_quit_requested() {
             break;
         }
 
-        let dt = get_frame_time();
 
+        let dt = get_frame_time();
         let sub_dt = dt / SUBSTEPS as f32;
         for _ in 0..SUBSTEPS {
-            sim.update(&mut particles, sub_dt);
+            for p in &mut particles {
+                p.reset_accel();
+            }
+
+            if is_mouse_button_down(MouseButton::Left) {
+                let (x, y) = mouse_position();
+                let mouse_pos = Vec2 { x, y };
+                let mouse_pos = reverse_projection(mouse_pos, SCALE);
+                for p in &mut particles {
+                    let dst = mouse_pos.distance(p.pos);
+                    if dst < 3.0 && dst != 0.0 {
+                        let dir = (mouse_pos - p.pos) / dst;
+                        p.accel.x += 50.0 * dir.x;
+                        p.accel.y += 50.0 * dir.y + 9.81;
+                    }
+                }
+            }
+
+            update(&mut particles, sub_dt, &bounds);
         }
 
         clear_background(BLACK);
