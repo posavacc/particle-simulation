@@ -9,12 +9,14 @@ pub struct Particle {
     pub mass: f32,
     pub rest: f32,
 
+    pub idx: i32,
+
     pub rad: f32,
     pub col: Color,
 }
 
 impl Particle {
-    pub fn new(pos: Vec2, rest: f32, radius: f32, color: Color) -> Self {
+    pub fn new(pos: Vec2, rest: f32, radius: f32, color: Color, idx: i32) -> Self {
         let mass = radius * radius * 1.0;
 
         Self {
@@ -24,6 +26,7 @@ impl Particle {
             force: Vec2::ZERO,
             mass: mass,
             rest: rest,
+            idx: idx,
             rad: radius,
             col: color
         }

@@ -1,6 +1,7 @@
 use macroquad::math::Vec2;
 
 use crate::particle::Particle;
+use crate::grid::Grid;
 
 pub const GRAVITY: Vec2 = Vec2 { x: 0.0, y: -9.81 * 1.0 };
 
@@ -18,7 +19,7 @@ impl Bounds {
     }
 }
 
-pub fn update(particles: &mut [Particle], dt: f32, bounds: &Bounds) {
+pub fn update(particles: &mut Vec<Particle>, dt: f32, grid: &Grid, bounds: &Bounds) {
     for part in &mut *particles {
         integrate(part, dt);
     }
@@ -27,6 +28,7 @@ pub fn update(particles: &mut [Particle], dt: f32, bounds: &Bounds) {
         bounds_collision(part, &bounds);
     }
 
+    /*
     for i in 0..particles.len() {
         for j in i+1..particles.len() {
             let (first, last) = particles.split_at_mut(j);
@@ -36,6 +38,11 @@ pub fn update(particles: &mut [Particle], dt: f32, bounds: &Bounds) {
 
             particle_collision(p1, p2);
         }
+    }
+    */
+
+    for i in 0..particles.len() {
+        grid.check_cell_collision(particles, i);
     }
 }
 
@@ -47,7 +54,7 @@ fn integrate(p: &mut Particle, dt: f32) {
     p.prev_pos = temp_pos;
 }
 
-fn particle_collision(p1: &mut Particle, p2: &mut Particle) {
+pub fn particle_collision(p1: &mut Particle, p2: &mut Particle) {
     let dst = p1.pos.distance(p2.pos);
 
     let overlap = p1.rad + p2.rad - dst;
@@ -64,30 +71,42 @@ fn particle_collision(p1: &mut Particle, p2: &mut Particle) {
 }
 
 fn bounds_collision(p: &mut Particle, bounds: &Bounds) {
-    let right  = bounds.max.x;
-    let left   = bounds.min.x;
-    let top    = bounds.max.y;
-    let bottom = bounds.min.y;
-
-    let rest = p.rest;
     let r = p.rad;
 
-    let overlap_right = (p.pos.x + r) - right;
-    let overlap_left = (p.pos.x - r) - left;
-    let overlap_bottom = (p.pos.y - r) - bottom;
-    let overlap_top = (p.pos.y + r) - top;
+    let right  = bounds.max.x - r;
+    let left   = bounds.min.x + r;
+    let top    = bounds.max.y - r;
+    let bottom = bounds.min.y + r;
 
-    if overlap_right >= 0.0 {
-        p.pos.x -= overlap_right * (1.0 + rest);
+    let rest = p.rest;
 
-    } else if overlap_left <= 0.0 {
-        p.pos.x -= overlap_left * (1.0 + rest);
+    if p.pos.x >= right {
+        let velocity_x = p.pos.x - p.prev_pos.x;
+
+        p.pos.x = right;
+
+        p.prev_pos.x = p.pos.x + velocity_x * rest;
+
+    } else if p.pos.x <= left {
+        let velocity_x = p.pos.x - p.prev_pos.x;
+
+        p.pos.x = left;
+
+        p.prev_pos.x = p.pos.x + velocity_x * rest;
     }
 
-    if overlap_top >= 0.0 {
-        p.pos.y -= overlap_top * (1.0 + rest);
+    if p.pos.y >= top {
+        let velocity_y = p.pos.y - p.prev_pos.y;
 
-    } else if overlap_bottom <= 0.0 {
-        p.pos.y -= overlap_bottom * (1.0 + rest);
+        p.pos.y = top;
+
+        p.prev_pos.y = p.pos.y + velocity_y * rest;
+
+    } else if p.pos.y <= bottom {
+        let velocity_y = p.pos.y - p.prev_pos.y;
+
+        p.pos.y = bottom;
+
+        p.prev_pos.y = p.pos.y + velocity_y * rest;
     }
 }

@@ -1,8 +1,9 @@
 use macroquad::{prelude::*};
-use particle_simulation::{particle::Particle, physics::*, render::*};
+use particle_simulation::{particle::Particle, physics::*, render::*, grid::*};
 
-const PARTICLE_COUNT: i32 = 1000;
+const PARTICLE_COUNT: i32 = 2000;
 const SUBSTEPS: i32 = 6;
+const FIXED_DT: f32 = 1.0 / 120.0;
 
 #[macroquad::main(window_conf())]
 async fn main() {
@@ -23,7 +24,7 @@ async fn main() {
         }
 
         let radius = ::rand::random_range(0.02..0.05);
-        let p = Particle::new(vec2(a, b), 0.7, radius, color);
+        let p = Particle::new(vec2(a, b), 0.7, radius, color, i);
 
         particles.push(p);
     }
@@ -32,21 +33,36 @@ async fn main() {
     let top = reverse_projection(vec2(HEIGHT as f32, 0.0), SCALE).y;
     let bounds = Bounds::new(-right, right, top, -top);
 
+    let mut grid = Grid::new(0.1);
+
+    let mut accumulator = 0.0;
     loop {
         if is_key_pressed(KeyCode::Escape) || is_quit_requested() {
             break;
         }
 
         let dt = get_frame_time();
-        let sub_dt = dt / SUBSTEPS as f32;
-        for _ in 0..SUBSTEPS {
-            for p in &mut particles {
-                p.reset_accel();
-            }
-            handle_input(&mut particles);
+        accumulator += dt;
 
-            update(&mut particles, sub_dt, &bounds);
+
+        while accumulator > FIXED_DT  {
+            let sub_dt = FIXED_DT / SUBSTEPS as f32;
+            for _ in 0..SUBSTEPS {
+                for p in &mut particles {
+                    p.reset_accel();
+                }
+                handle_input(&mut particles);
+
+                grid.calculate_cells(&particles);
+
+                update(&mut particles, sub_dt, &grid, &bounds);
+
+                grid.reset_grid();
+            }
+
+            accumulator -= FIXED_DT;
         }
+
 
         clear_background(BLACK);
         draw(&particles);

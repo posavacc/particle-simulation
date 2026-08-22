@@ -3,7 +3,7 @@ use crate::particle::Particle;
 
 pub const WIDTH:  i32 = 1920;
 pub const HEIGHT: i32 = 1080;
-pub const SCALE: f32 = 250.0;
+pub const SCALE: f32 = 220.0;
 
 pub fn project_to_screen(p: Vec2, scale: f32) -> Vec2 {
     Vec2 {
@@ -35,7 +35,7 @@ pub fn window_conf() -> Conf {
         window_height: HEIGHT,
         window_resizable: true,
         platform: miniquad::conf::Platform {
-            swap_interval: Some(1),
+           swap_interval: Some(1),
             ..Default::default()
         },
         ..Default::default()
