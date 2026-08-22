@@ -12,18 +12,8 @@ async fn main() {
     let top_left = reverse_projection(vec2(0.0, 0.0), SCALE);
     let bottom_right = reverse_projection(vec2(WIDTH as f32, HEIGHT as f32), SCALE);
     for i in 0..PARTICLE_COUNT {
-        let mut a: f32 = ::rand::random_range(-08.0..08.0);
-        let mut b: f32 = ::rand::random_range(-05.0..05.0);
-
-        for part in &particles {
-            let mut dst = vec2(a, b).distance(part.pos);
-            while dst < 5.0 {
-                a = ::rand::random_range(top_left.x..bottom_right.x);
-                b = ::rand::random_range(bottom_right.y..top_left.y);
-
-                dst = vec2(a, b).distance(part.pos);
-            }
-        }
+        let a = ::rand::random_range(top_left.x..bottom_right.x);
+        let b = ::rand::random_range(bottom_right.y..top_left.y);
 
         let mut color = PURPLE;
         if i % 2 == 0 {
@@ -32,7 +22,7 @@ async fn main() {
             color = Color::new(0.5, 0.0, 0.5, 1.0);
         }
 
-        let radius = ::rand::random_range(0.06..0.14);
+        let radius = ::rand::random_range(0.02..0.05);
         let p = Particle::new(vec2(a, b), 0.7, radius, color);
 
         particles.push(p);
@@ -73,33 +63,48 @@ fn handle_input(particles: &mut Vec<Particle>) {
         let mouse_pos = reverse_projection(mouse_pos, SCALE);
         for p in &mut *particles {
             let dst = mouse_pos.distance(p.pos);
-            if dst < 3.0 && dst != 0.0 {
+            if dst < 1.2 && dst != 0.0 {
+                let dir = (mouse_pos - p.pos) / dst;
+                let force = 70.0;
+                p.accel.x += force * dir.x;
+                p.accel.y += force * dir.y + GRAVITY.y;
+            }
+        }
+    }
+    if is_mouse_button_down(MouseButton::Right) {
+        let (x, y) = mouse_position();
+        let mouse_pos = Vec2 { x, y };
+        let mouse_pos = reverse_projection(mouse_pos, SCALE);
+        for p in &mut *particles {
+            let dst = mouse_pos.distance(p.pos);
+            if dst < 0.7 && dst != 0.0 {
                 let dir = (mouse_pos - p.pos) / dst;
                 let force = 100.0;
-                p.accel.x += force * dir.x;
-                p.accel.y += force * dir.y + 9.81;
+                p.accel.x -= force * dir.x;
+                p.accel.y -= force * dir.y + GRAVITY.y;
             }
         }
     }
 
+    let force = 50.0;
     if is_key_down(KeyCode::Left) {
         for p in &mut *particles {
-            p.accel = Vec2::new(-100.0, 0.0);
+            p.accel = Vec2::new(-force, 0.0);
         }
     }
     if is_key_down(KeyCode::Right) {
         for p in &mut *particles {
-            p.accel = Vec2::new(100.0, 0.0);
+            p.accel = Vec2::new(force, 0.0);
         }
     }
     if is_key_down(KeyCode::Up) {
         for p in &mut *particles {
-            p.accel = Vec2::new(0.0, 100.0);
+            p.accel = Vec2::new(0.0, force);
         }
     }
     if is_key_down(KeyCode::Down) {
         for p in &mut *particles {
-            p.accel = Vec2::new(0.0, -100.0);
+            p.accel = Vec2::new(0.0, -force);
         }
     }
 }

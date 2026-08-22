@@ -2,7 +2,7 @@ use macroquad::math::Vec2;
 
 use crate::particle::Particle;
 
-const GRAVITY: Vec2 = Vec2 { x: 0.0, y: -9.81 };
+pub const GRAVITY: Vec2 = Vec2 { x: 0.0, y: -9.81 * 1.0 };
 
 pub struct Bounds {
     pub min: Vec2,
@@ -55,8 +55,11 @@ fn particle_collision(p1: &mut Particle, p2: &mut Particle) {
     if overlap > 0.0 && dst != 0.0 {
         let n = (p2.pos - p1.pos) / dst;
 
-        p1.pos -= overlap * 0.5 * n;
-        p2.pos += overlap * 0.5 * n;
+        let mass_weight = p2.mass / (p1.mass + p2.mass);
+        let relaxation = 0.5;
+
+        p1.pos -= overlap * n * mass_weight * relaxation;
+        p2.pos += overlap * n * (1.0 - mass_weight) * relaxation;
     }
 }
 
