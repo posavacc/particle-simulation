@@ -1,9 +1,9 @@
 use macroquad::{prelude::*};
 use particle_simulation::{particle::Particle, physics::*, render::*, grid::*};
 
-const PARTICLE_COUNT: i32 = 2000;
+const PARTICLE_COUNT: i32 = 3000;
 const SUBSTEPS: i32 = 8;
-const FIXED_DT: f32 = 1.0 / 100.0;
+const FIXED_DT: f32 = 1.0 / 60.0;
 
 #[macroquad::main(window_conf())]
 async fn main() {
@@ -24,7 +24,7 @@ async fn main() {
         }
 
         let radius = ::rand::random_range(0.02..0.05);
-        let p = Particle::new(vec2(a, b), 0.7, radius, color, i);
+        let p = Particle::new(vec2(a, b), 0.7, radius, color);
 
         particles.push(p);
     }
@@ -38,6 +38,8 @@ async fn main() {
 
     let mut grid = Grid::new(0.1, &bounds);
 
+    let mut time = 0.0;
+    let mut frame_time = String::from("0");
     let mut accumulator = 0.0;
     loop {
         if is_key_pressed(KeyCode::Escape) || is_quit_requested() {
@@ -70,7 +72,17 @@ async fn main() {
 
         let t = accumulator / FIXED_DT;
         draw(&particles, t);
-        draw_fps();
+
+        time += dt;
+        frame_time = if time > 0.5 {
+            time = 0.0;
+            format!("{:.2} ms", dt * 1e3)
+        } else  {
+            frame_time
+        };
+
+        draw_text(&frame_time, 10.0, 25.0, 30.0, WHITE);
+
 
         next_frame().await
     }
@@ -109,22 +121,22 @@ fn handle_input(particles: &mut Vec<Particle>) {
     let force = 20.0;
     if is_key_down(KeyCode::Left) {
         for p in &mut *particles {
-            p.accel = Vec2::new(-force, 0.0);
+            p.accel += Vec2::new(-force, 0.0);
         }
     }
     if is_key_down(KeyCode::Right) {
         for p in &mut *particles {
-            p.accel = Vec2::new(force, 0.0);
+            p.accel += Vec2::new(force, 0.0);
         }
     }
     if is_key_down(KeyCode::Up) {
         for p in &mut *particles {
-            p.accel = Vec2::new(0.0, force - GRAVITY.y);
+            p.accel += Vec2::new(0.0, force - GRAVITY.y);
         }
     }
     if is_key_down(KeyCode::Down) {
         for p in &mut *particles {
-            p.accel = Vec2::new(0.0, -force);
+            p.accel += Vec2::new(0.0, -force);
         }
     }
 }

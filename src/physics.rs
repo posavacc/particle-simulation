@@ -41,14 +41,17 @@ fn integrate(p: &mut Particle, dt: f32) {
 
 pub fn particle_collision(p1: &mut Particle, p2: &mut Particle) {
     let dst_sqrd = p1.pos.distance_squared(p2.pos);
+    let radii = p1.rad + p2.rad;
+    let epsilon = 0.01;
 
-    if dst_sqrd < (p1.rad + p2.rad) * (p1.rad + p2.rad) && dst_sqrd != 0.0 {
+    if dst_sqrd < radii * radii && dst_sqrd > epsilon * epsilon {
         let dst = dst_sqrd.sqrt();
-        let overlap = p1.rad + p2.rad - dst;
+
+        let overlap = radii - dst;
         let n = (p2.pos - p1.pos) / dst;
 
         let mass_weight = p2.mass / (p1.mass + p2.mass);
-        let relaxation = 0.5;
+        let relaxation = 0.2;
 
         p1.pos -= overlap * n * mass_weight * relaxation;
         p2.pos += overlap * n * (1.0 - mass_weight) * relaxation;
