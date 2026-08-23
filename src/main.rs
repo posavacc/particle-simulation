@@ -1,4 +1,5 @@
-use macroquad::{prelude::*};
+use macroquad::prelude::*;
+use rayon::prelude::*;
 use particle_simulation::{particle::Particle, physics::*, render::*, grid::*};
 
 const PARTICLE_COUNT: i32 = 3000;

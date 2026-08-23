@@ -31,7 +31,7 @@ impl Grid {
             length = world_width / columns;
 
             while world_width % length != 0.0 {
-                columns += 1.0;
+                columns -= 1.0;
                 length = world_width / columns;
             }
         } else {
@@ -43,7 +43,7 @@ impl Grid {
             height = world_height / rows.round();
 
             while world_height % height != 0.0 {
-                rows += 1.0;
+                rows -= 1.0;
                 height = world_height / rows;
             }
         } else {
@@ -128,12 +128,13 @@ impl Grid {
     }
 
     pub fn calculate_cells(&mut self, particles: &Vec<Particle>, bounds: &Bounds) {
-        unsafe {
-            for i in 0..particles.len() {
-                let p = particles.get_unchecked(i);
-                let key = self.cell_coordinate(p.pos, bounds);
-                self.cells.entry(key).or_insert_with(|| { Vec::new() }).push(i);
-            }
+        for i in 0..particles.len() {
+            let p = match particles.get(i) {
+                Some(value) => value,
+                None => continue
+            };
+            let key = self.cell_coordinate(p.pos, bounds);
+            self.cells.entry(key).or_insert_with(|| { Vec::new() }).push(i);
         }
     }
 
