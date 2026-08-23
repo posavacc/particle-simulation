@@ -3,7 +3,7 @@ use particle_simulation::{particle::Particle, physics::*, render::*, grid::*};
 
 const PARTICLE_COUNT: i32 = 2000;
 const SUBSTEPS: i32 = 8;
-const FIXED_DT: f32 = 1.0 / 80.0;
+const FIXED_DT: f32 = 1.0 / 100.0;
 
 #[macroquad::main(window_conf())]
 async fn main() {
@@ -30,10 +30,13 @@ async fn main() {
     }
 
     let right = reverse_projection(vec2(WIDTH as f32, 0.0), SCALE).x;
-    let top = reverse_projection(vec2(HEIGHT as f32, 0.0), SCALE).y;
-    let bounds = Bounds::new(-right, right, top, -top);
+    let left = reverse_projection(vec2(0.0, 0.0), SCALE).x;
+    let top = reverse_projection(vec2(0.0, 0.0), SCALE).y;
+    let bottom = reverse_projection(vec2(0.0, HEIGHT as f32), SCALE).y;
 
-    let mut grid = Grid::new(0.1);
+    let bounds = Bounds::new(left, right, top, bottom);
+
+    let mut grid = Grid::new(0.1, &bounds);
 
     let mut accumulator = 0.0;
     loop {
@@ -52,9 +55,9 @@ async fn main() {
                 }
                 handle_input(&mut particles);
 
-                grid.calculate_cells(&particles);
+                grid.calculate_cells(&particles, &bounds);
 
-                update(&mut particles, sub_dt, &grid, &bounds);
+                update(&mut particles, sub_dt, &mut grid, &bounds);
 
                 grid.reset_grid();
             }

@@ -19,7 +19,7 @@ impl Bounds {
     }
 }
 
-pub fn update(particles: &mut Vec<Particle>, dt: f32, grid: &Grid, bounds: &Bounds) {
+pub fn update(particles: &mut Vec<Particle>, dt: f32, grid: &mut Grid, bounds: &Bounds) {
     for part in &mut *particles {
         integrate(part, dt);
     }
@@ -28,9 +28,7 @@ pub fn update(particles: &mut Vec<Particle>, dt: f32, grid: &Grid, bounds: &Boun
         bounds_collision(part, &bounds);
     }
 
-    for i in 0..particles.len() {
-        grid.check_cell_collision(particles, i);
-    }
+    grid.check_all_cell_collision(particles);
 }
 
 fn integrate(p: &mut Particle, dt: f32) {
