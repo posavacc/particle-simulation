@@ -28,19 +28,6 @@ pub fn update(particles: &mut Vec<Particle>, dt: f32, grid: &Grid, bounds: &Boun
         bounds_collision(part, &bounds);
     }
 
-    /*
-    for i in 0..particles.len() {
-        for j in i+1..particles.len() {
-            let (first, last) = particles.split_at_mut(j);
-
-            let p1 = &mut first[i];
-            let p2 = &mut last[0];
-
-            particle_collision(p1, p2);
-        }
-    }
-    */
-
     for i in 0..particles.len() {
         grid.check_cell_collision(particles, i);
     }
@@ -55,11 +42,11 @@ fn integrate(p: &mut Particle, dt: f32) {
 }
 
 pub fn particle_collision(p1: &mut Particle, p2: &mut Particle) {
-    let dst = p1.pos.distance(p2.pos);
+    let dst_sqrd = p1.pos.distance_squared(p2.pos);
 
-    let overlap = p1.rad + p2.rad - dst;
-
-    if overlap > 0.0 && dst != 0.0 {
+    if dst_sqrd < (p1.rad + p2.rad) * (p1.rad + p2.rad) && dst_sqrd != 0.0 {
+        let dst = dst_sqrd.sqrt();
+        let overlap = p1.rad + p2.rad - dst;
         let n = (p2.pos - p1.pos) / dst;
 
         let mass_weight = p2.mass / (p1.mass + p2.mass);
@@ -95,17 +82,17 @@ fn bounds_collision(p: &mut Particle, bounds: &Bounds) {
         p.prev_pos.x = p.pos.x + velocity_x * rest;
     }
 
-    if p.pos.y >= top {
-        let velocity_y = p.pos.y - p.prev_pos.y;
-
-        p.pos.y = top;
-
-        p.prev_pos.y = p.pos.y + velocity_y * rest;
-
-    } else if p.pos.y <= bottom {
+    if p.pos.y <= bottom {
         let velocity_y = p.pos.y - p.prev_pos.y;
 
         p.pos.y = bottom;
+
+        p.prev_pos.y = p.pos.y + velocity_y * rest;
+
+    } else if p.pos.y >= top {
+        let velocity_y = p.pos.y - p.prev_pos.y;
+
+        p.pos.y = top;
 
         p.prev_pos.y = p.pos.y + velocity_y * rest;
     }

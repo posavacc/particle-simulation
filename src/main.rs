@@ -97,12 +97,12 @@ fn handle_input(particles: &mut Vec<Particle>) {
                 let dir = (mouse_pos - p.pos) / dst;
                 let force = 100.0;
                 p.accel.x -= force * dir.x;
-                p.accel.y -= force * dir.y + GRAVITY.y;
+                p.accel.y -= force * dir.y - GRAVITY.y;
             }
         }
     }
 
-    let force = 50.0;
+    let force = 20.0;
     if is_key_down(KeyCode::Left) {
         for p in &mut *particles {
             p.accel = Vec2::new(-force, 0.0);
@@ -115,7 +115,7 @@ fn handle_input(particles: &mut Vec<Particle>) {
     }
     if is_key_down(KeyCode::Up) {
         for p in &mut *particles {
-            p.accel = Vec2::new(0.0, force);
+            p.accel = Vec2::new(0.0, force - GRAVITY.y);
         }
     }
     if is_key_down(KeyCode::Down) {
