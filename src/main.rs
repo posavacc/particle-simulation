@@ -2,8 +2,8 @@ use macroquad::{prelude::*};
 use particle_simulation::{particle::Particle, physics::*, render::*, grid::*};
 
 const PARTICLE_COUNT: i32 = 2000;
-const SUBSTEPS: i32 = 6;
-const FIXED_DT: f32 = 1.0 / 120.0;
+const SUBSTEPS: i32 = 8;
+const FIXED_DT: f32 = 1.0 / 80.0;
 
 #[macroquad::main(window_conf())]
 async fn main() {
@@ -44,7 +44,6 @@ async fn main() {
         let dt = get_frame_time();
         accumulator += dt;
 
-
         while accumulator > FIXED_DT  {
             let sub_dt = FIXED_DT / SUBSTEPS as f32;
             for _ in 0..SUBSTEPS {
@@ -65,7 +64,9 @@ async fn main() {
 
 
         clear_background(BLACK);
-        draw(&particles);
+
+        let t = accumulator / FIXED_DT;
+        draw(&particles, t);
         draw_fps();
 
         next_frame().await
