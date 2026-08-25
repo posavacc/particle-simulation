@@ -3,7 +3,7 @@ use crate::particle::Particle;
 
 pub const WIDTH:  i32 = 1920;
 pub const HEIGHT: i32 = 1080;
-pub const SCALE: f32 = 180.0;
+pub const SCALE: f32 = 160.0;
 
 pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
     a + (b - a) * t

@@ -63,15 +63,13 @@ impl Grid {
         let (cx, cy) = cell_coords;
 
         let cell_vector = self.cells.get(&cell_coords);
-        let cell_indicies = match cell_vector {
-            Some(vector) => vector,
-            None => return
+        let Some(cell_indicies) = cell_vector else {
+            return;
         };
 
         for i in 0..cell_indicies.len() {
-            let index = match cell_indicies.get(i) {
-                Some(value) => value,
-                None => continue
+            let Some(index) = cell_indicies.get(i) else {
+                continue;
             };
 
             for dx in 0..=1 {
@@ -80,9 +78,8 @@ impl Grid {
                         continue;
                     }
                     let key = (cx + dx, cy + dy);
-                    let idx_vec = match self.cells.get(&key) {
-                        Some(value) => value,
-                        None => continue
+                    let Some(idx_vec) = self.cells.get(&key) else {
+                        continue;
                     };
 
                     for idx in idx_vec {
@@ -129,9 +126,8 @@ impl Grid {
 
     pub fn calculate_cells(&mut self, particles: &Vec<Particle>, bounds: &Bounds) {
         for i in 0..particles.len() {
-            let p = match particles.get(i) {
-                Some(value) => value,
-                None => continue
+            let Some(p) = particles.get(i) else {
+                continue;
             };
             let key = self.cell_coordinate(p.pos, bounds);
             self.cells.entry(key).or_insert_with(|| { Vec::new() }).push(i);

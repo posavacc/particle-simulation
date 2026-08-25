@@ -1,21 +1,26 @@
 use macroquad::prelude::*;
-use rayon::prelude::*;
 use particle_simulation::{particle::Particle, physics::*, render::*, grid::*};
 
 const PARTICLE_COUNT: i32 = 3000;
 const SUBSTEPS: i32 = 8;
-const FIXED_DT: f32 = 1.0 / 60.0;
+const FIXED_DT: f32 = 1.0 / 80.0;
 
 #[macroquad::main(window_conf())]
 async fn main() {
+    let right = reverse_projection(vec2(WIDTH as f32, 0.0), SCALE).x;
+    let left = reverse_projection(vec2(0.0, 0.0), SCALE).x;
+    let top = reverse_projection(vec2(0.0, 0.0), SCALE).y;
+    let bottom = reverse_projection(vec2(0.0, HEIGHT as f32), SCALE).y;
+
+    let bounds = Bounds::new(left, right, top, bottom);
+
+    let mut grid = Grid::new(0.1, &bounds);
 
     let mut particles: Vec<Particle> = Vec::new();
 
-    let top_left = reverse_projection(vec2(0.0, 0.0), SCALE);
-    let bottom_right = reverse_projection(vec2(WIDTH as f32, HEIGHT as f32), SCALE);
     for i in 0..PARTICLE_COUNT {
-        let a = ::rand::random_range(top_left.x..bottom_right.x);
-        let b = ::rand::random_range(bottom_right.y..top_left.y);
+        let a = ::rand::random_range(left..right);
+        let b = ::rand::random_range(bottom..top);
 
         let mut color = PURPLE;
         if i % 2 == 0 {
@@ -30,14 +35,6 @@ async fn main() {
         particles.push(p);
     }
 
-    let right = reverse_projection(vec2(WIDTH as f32, 0.0), SCALE).x;
-    let left = reverse_projection(vec2(0.0, 0.0), SCALE).x;
-    let top = reverse_projection(vec2(0.0, 0.0), SCALE).y;
-    let bottom = reverse_projection(vec2(0.0, HEIGHT as f32), SCALE).y;
-
-    let bounds = Bounds::new(left, right, top, bottom);
-
-    let mut grid = Grid::new(0.1, &bounds);
 
     let mut time = 0.0;
     let mut frame_time = String::from("0");
@@ -68,7 +65,6 @@ async fn main() {
             accumulator -= FIXED_DT;
         }
 
-
         clear_background(BLACK);
 
         let t = accumulator / FIXED_DT;
@@ -83,7 +79,6 @@ async fn main() {
         };
 
         draw_text(&frame_time, 10.0, 25.0, 30.0, WHITE);
-
 
         next_frame().await
     }
@@ -110,7 +105,7 @@ fn handle_input(particles: &mut Vec<Particle>) {
         let mouse_pos = reverse_projection(mouse_pos, SCALE);
         for p in &mut *particles {
             let dst = mouse_pos.distance(p.pos);
-            if dst < 0.7 && dst != 0.0 {
+            if dst < 1.0 && dst != 0.0 {
                 let dir = (mouse_pos - p.pos) / dst;
                 let force = 100.0;
                 p.accel.x -= force * dir.x;

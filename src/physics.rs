@@ -51,7 +51,7 @@ pub fn particle_collision(p1: &mut Particle, p2: &mut Particle) {
         let n = (p2.pos - p1.pos) / dst;
 
         let mass_weight = p2.mass / (p1.mass + p2.mass);
-        let relaxation = 0.2;
+        let relaxation = 0.4;
 
         p1.pos -= overlap * n * mass_weight * relaxation;
         p2.pos += overlap * n * (1.0 - mass_weight) * relaxation;
